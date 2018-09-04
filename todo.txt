@@ -1,0 +1,4 @@
+have to this think recursive
+output a list of all fighter links to one file
+once we have that list, we can chunk through that and get details of each fighter_links
+then we can remove the layer of saving links to file, and just make it get details
