@@ -1,4 +1,3 @@
-have to this think recursive
-output a list of all fighter links to one file
-once we have that list, we can chunk through that and get details of each fighter_links
-then we can remove the layer of saving links to file, and just make it get details
+Scraper is getting links from pages that it already has gotten links from, creating a loop of link getting
+Not only keep track of fighter links captured,
+but also keep track of which fighters we captured links from

@@ -11,83 +11,72 @@ def get_soup(current_page):
 # from the given page
 # param raw_links   : a href links grabbed from get_raw_links
 # param links       : url with /fighter/ being the root
-def get_fighter_links(raw_links):
+def get_fighter_links(raw_links, fighters):
     urlroot = "https://www.mixedmartialarts.com/"
-    links = []
     # pattern = re.compile(r'<a href=\"\/*fighter\/[A-Za-z]*-[A-Za-z]*:[A-Z0-9]*\">')
     pattern = re.compile(r'\/?fighter\/[A-Za-z]*-[A-Za-z]*:[A-Z0-9]*')
     for line in raw_links:
         match = re.search(pattern, line)
         if match:
-            link = urlroot + match.group(0)
-            if link not in links:
-                links.append(link)
+            fighter = urlroot + match.group(0)
+            if fighter not in fighters:
+                fighters.append(fighter)
 
-    return links
+    return fighters
 
 #get_raw_links returns a href links from a given page
-def get_raw_links(current_page):
-    soup = get_soup(current_page)
-    list_of_link_lines = soup.find_all('a')
-    raw_links = []
-    for line in list_of_link_lines:
-        raw_links.append(line.prettify())
+def get_complete_links(pages):
+    return_list = []
+    for page in pages:
+        print("getting links from page : " + str(page))
+        soup = get_soup(page)
+        list_of_link_lines = soup.find_all('a')
+        raw_links = []
+        for line in list_of_link_lines:
+            raw_links.append(line.prettify())
 
-    fighter_links = get_fighter_links(raw_links)
-    return fighter_links
+        return_list = get_fighter_links(raw_links, return_list)
+
+    return return_list
 
 # returns True if everything in second_list is alread in first_list
 # writes any fighters in second_list that aren't in first_list
-def write_new_fighters(new_list, complete_list):
+def write_new_fighters(new_fighters, fighters):
     new_fighters_written = []
 
-    for element in new_list:
-        if element not in complete_list:
-            #write new link to file
-            with open("C:/Users/jerem/Documents/sherdog_scraper/fighter_links.txt", 'a', encoding='utf8') as file:
-                print("writing : " + element)
-                file.write(element + '\n')
-                new_fighters_written.append(element)
+    for fighter in new_fighters:
+         if fighter not in fighters:
+             #write new link to file
+             with open("C:/Users/jerem/Documents/sherdog_scraper/fighter_links.txt", 'a', encoding='utf8') as file:
+                 print("writing : " + fighter)
+                 file.write(fighter + '\n')
+                 new_fighters_written.append(fighter)
 
     return new_fighters_written
-
-# scrape fighter links
-# recursive funtion to get all existing fighter links
-# end condition, when all fighter links in root_page are already in figher_links
-def scrape_fighter_links(fighter_links, root_page):
-    urlroot = "https://www.mixedmartialarts.com/"
-    new_links = get_raw_links(root_page)
-
-    #do magic
-    new_fighters = write_new_fighters(new_links, fighter_links)
-
-    # evaluate end condition
-    if new_fighters:
-        #overwrite fighter_links with new_links
-        fighter_links = new_links
-        for fighter in new_fighters:
-            print("scrape : " + fighter)
-            # scrape_fighter_links(fighter_links, fighter)
-    else:
-        print("DONE SCRAPING!\n")
-        return fighter_links
 
 def get_cached_links():
     fighter_file = "C:/Users/jerem/Documents/sherdog_scraper/fighter_links.txt"
     fighter_links = open(fighter_file, 'r').read().splitlines()
-
     return fighter_links
 
 def main():
     #setup content file
-    rootpage = "https://www.mixedmartialarts.com/fighter"
-    fighter_links = get_cached_links()
+    rootpage = ["https://www.mixedmartialarts.com/fighter"]
+    # fighters = get_cached_links()
+    fighters = []
+    # normalize data
+    # of fighter_links, need to start with the last 350, because supposedly this is the most fighters one fighter has fought
+    new_fighters = get_complete_links(rootpage)
+    write_new_fighters(new_fighters, fighters)
+    fighters = fighters + new_fighters
 
-    try:
-        fighter_links = scrape_fighter_links(fighter_links, rootpage)
-    except RecursionError as re:
-        print("Maximum Recursion depth exceeded.\n")
-        print("Links cached in : C:/Users/jerem/Documents/sherdog_scraper/fighter_links.txt")
+    # #do magic, assuming there are new fighters among the last 350
+    while new_fighters:
+        new_fighters = get_complete_links(new_fighters)
+        write_new_fighters(new_fighters, fighters)
+        fighters = fighters + new_fighters
+
+    print("Done scraping!\n")
 
 if __name__ == "__main__":
     main()
