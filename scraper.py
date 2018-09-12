@@ -10,7 +10,6 @@ def get_soup(current_page):
 # get_fighter_links takes raw_links and adds /fighter links to the existing list
 # from the given page
 # param raw_links   : a href links grabbed from get_raw_links
-# param links       : url with /fighter/ being the root
 def get_fighter_links(raw_links, fighters):
     urlroot = "https://www.mixedmartialarts.com/"
     # pattern = re.compile(r'<a href=\"\/*fighter\/[A-Za-z]*-[A-Za-z]*:[A-Z0-9]*\">')
@@ -24,22 +23,20 @@ def get_fighter_links(raw_links, fighters):
 
     return fighters
 
-#get_raw_links returns a href links from a given page
-def get_complete_links(pages):
+#get_raw_links but also call get_fighter_links to process them, before returning processed list
+def get_complete_links(pages, fighters):
     return_list = []
+    raw_links = []
+    #we need to limit this to pages we have not yet visited
     for page in pages:
         print("getting links from page : " + str(page))
         soup = get_soup(page)
         list_of_link_lines = soup.find_all('a')
-        raw_links = []
         for line in list_of_link_lines:
             raw_links.append(line.prettify())
 
-        return_list = get_fighter_links(raw_links, return_list)
+    return get_fighter_links(raw_links, fighters)
 
-    return return_list
-
-# returns True if everything in second_list is alread in first_list
 # writes any fighters in second_list that aren't in first_list
 def write_new_fighters(new_fighters, fighters):
     new_fighters_written = []
@@ -60,19 +57,19 @@ def get_cached_links():
     return fighter_links
 
 def main():
+    #used to oop, so passing around fighters to maintain state, seems weird
+    #maybe convert to class
+
     #setup content file
     rootpage = ["https://www.mixedmartialarts.com/fighter"]
-    # fighters = get_cached_links()
     fighters = []
-    # normalize data
-    # of fighter_links, need to start with the last 350, because supposedly this is the most fighters one fighter has fought
-    new_fighters = get_complete_links(rootpage)
+    new_fighters = get_complete_links(rootpage, fighters)
     write_new_fighters(new_fighters, fighters)
     fighters = fighters + new_fighters
 
-    # #do magic, assuming there are new fighters among the last 350
+    #do magic, assuming there are new fighters among the last 350
     while new_fighters:
-        new_fighters = get_complete_links(new_fighters)
+        new_fighters = get_complete_links(new_fighters, fighters)
         write_new_fighters(new_fighters, fighters)
         fighters = fighters + new_fighters
 

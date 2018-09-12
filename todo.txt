@@ -1,3 +1,6 @@
 Scraper is getting links from pages that it already has gotten links from, creating a loop of link getting
 Not only keep track of fighter links captured,
 but also keep track of which fighters we captured links from
+
+I don't like passing fighters, and again I'd have to keep passing and returning fighter_links_visited
+So to stop the crazy state transfer, I need to convert this whole thing to a class
